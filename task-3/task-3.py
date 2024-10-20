@@ -20,7 +20,7 @@ Output:
     - overall statistics by logging level with the count of entries for each level;
     - if a logging level is specified, detailed entries for that level are displayed;
 
-Error Handling:
+Error handling:
     - the script will print an error message and exit if the specified log file is not found;
     - if a log line format is incorrect, the script will report the error but continue processing;
 

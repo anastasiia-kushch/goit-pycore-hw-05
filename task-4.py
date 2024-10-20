@@ -1,53 +1,71 @@
 from colorama import Fore
 
+def input_error(func):
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError as e:
+            return e
+        except ValueError as e:
+            return e
+        except IndexError as e:
+            return e
+        except Exception as e:
+            return f'An unexpected error occurred: {e}. Please try again.'
+    return inner
+
+
 def parse_input(user_input):
     if not user_input.strip():
         return None, []
-
+    
     cmd, *args = user_input.split()
     cmd = cmd.strip().lower()
     return cmd, *args
 
 
+@input_error
 def add_contact(args, contacts):
     if len(args) < 2:
-        return colored_error("Please provide both a name and a phone number.")
+        raise ValueError(colored_error("Please provide both a name and a phone number."))
     
     name, phone = args
     if name in contacts:
-        return colored_error("Contact already exists. Use 'change' to modify.")
-    
+        raise KeyError(colored_error("Contact already exists. Use 'change' to modify."))
+      
     contacts[name] = phone
     return colored_output(f"Contact '{name}' added.")
 
 
+@input_error
 def change_contact(args, contacts):
     if len(args) < 2:
-        return colored_error("Please provide both a name and a new phone number.")
+        raise ValueError(colored_error("Please provide both a name and a phone number."))
     
     name, phone = args
     if name not in contacts:
-        return colored_error(f"Contact '{name}' not found. Use 'add' to create it.")
+        raise IndexError(colored_error(f"Contact '{name}' not found. Use 'add' to create it."))
     
     contacts[name] = phone
     return colored_output(f"Contact '{name}' changed.")
 
 
+@input_error
 def show_phone(args, contacts):
     if not args:
-        return colored_error("No contact name provided.")
+        raise ValueError(colored_error("No contact name provided."))
     
     name = args[0]
     phone = contacts.get(name, None)
     if phone:
         return colored_output(phone)
     else:
-        return colored_error(f"Contact '{name}' not found.")
+        raise IndexError(colored_error(f"Contact '{name}' not found."))
     
-
+@input_error
 def show_all(contacts):
     if not contacts:
-        return colored_error("No contacts available.")
+        raise ValueError(colored_error("No contacts available."))
     
     result = [f"{name}: {phone}" for name, phone in contacts.items()]
     return colored_output('\n'.join(result))
@@ -79,8 +97,9 @@ def colored_info(phrase):
 
 
 def main():
+
     '''
-    Assistant bot that helps manage a contact list with simple commands.
+    Assistant bot that helps manage a contact list with simple commands and handles errors gracefully.
 
     The bot supports adding, changing, and viewing contacts, as well as displaying all contacts and showing available commands.
 
@@ -94,11 +113,16 @@ def main():
 
     The bot runs in a loop, accepting user input and executing commands until 'close' or 'exit' is typed.
 
+    Error Handling:
+    - errors such as missing arguments, invalid commands, or non-existing contacts are handled by the `input_error` decorator.
+    - common exceptions (KeyError, ValueError, IndexError) are intercepted by the decorator and return user-friendly error messages.
+    - unexpected exceptions are also caught, providing a generic error message without breaking the program flow.
+
     Returns:
-    None: the bot prints results directly to the console.
+    None: the bot prints results directly to the console, including success messages and error feedback.
 
     Note:
-    The bot handles common input errors, such as missing arguments or invalid commands, by displaying error messages.
+    The bot provides colored output for both successful operations and errors, using the `colorama` library for visual distinction.
     '''
 
     contacts = {}
@@ -123,7 +147,10 @@ def main():
         elif command == "all":
             print(show_all(contacts))
         else:
-            print(colored_info("Invalid command."))
+            print(colored_error("Invalid command."))
 
 if __name__ == "__main__":
     main()
+
+
+
